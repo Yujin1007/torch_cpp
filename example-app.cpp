@@ -1,0 +1,115 @@
+#include <torch/torch.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+using namespace std;
+
+class Net : public torch::nn::Module
+{
+public:
+  Net(int64_t input_size, int64_t hidden_size, int64_t output_size)
+      : linear1(input_size, hidden_size),
+        linear2(hidden_size, hidden_size),
+        linear3(hidden_size, output_size)
+  {
+    register_module("linear1", linear1);
+    register_module("linear2", linear2);
+    register_module("linear3", linear3);
+  }
+
+  torch::Tensor forward(torch::Tensor x)
+  {
+    x = torch::relu(linear1(x));
+    x = torch::relu(linear2(x));
+    x = linear3(x);
+    return x;
+  }
+  void setWeights()
+  {
+    torch::load(linear1,"/home/kist-robot2/catkin_ws/src/franka_emika_panda/py_src/weight/fc1.pt");
+    torch::load(linear2,"/home/kist-robot2/catkin_ws/src/franka_emika_panda/py_src/weight/fc2.pt");
+    torch::load(linear3,"/home/kist-robot2/catkin_ws/src/franka_emika_panda/py_src/weight/fc3.pt");
+    // cout<<linear1->bias<<endl;
+  }
+
+
+private:
+  torch::nn::Linear linear1;
+  torch::nn::Linear linear2;
+  torch::nn::Linear linear3;
+};
+
+int main(int argc, char** argv)
+{
+  ifstream inputFile(argv[1]);
+  vector<vector<float>> data;
+  string line;
+  while (getline(inputFile, line))
+  {
+    vector<float> row;
+    istringstream iss(line);
+    float value;
+    while (iss >> value)
+    {
+      row.push_back(value);
+      if (iss.peek() == ',')
+        iss.ignore();
+    }
+
+    data.push_back(row);
+  }
+  inputFile.close();
+
+  ifstream inputFile2(argv[2]);
+  vector<vector<float>> target;
+  
+  while (getline(inputFile2, line))
+  {
+    vector<float> row;
+    istringstream iss(line);
+    float value;
+    while (iss >> value)
+    {
+      row.push_back(value);
+      if (iss.peek() == ',')
+        iss.ignore();
+    }
+
+    target.push_back(row);
+  }
+  inputFile2.close();
+
+
+  int64_t input_size = 139;
+  int64_t hidden_size = 256;
+  int64_t output_size = 6;
+  int64_t batch_size = 4;
+
+  torch::manual_seed(123); // Set a random seed for reproducibility
+
+  
+
+  // Create a neural network
+  Net net(input_size, hidden_size, output_size);
+
+
+  net.setWeights();
+  net.to(torch::kCPU);
+
+  // torch::nn::MSELoss loss_fn;
+  // torch::optim::SGD optimizer(net.parameters(), /*lr=*/0.01);
+torch::TensorOptions options_(torch::kFloat);
+
+  for(size_t i=0;i<1;++i){
+    torch::Tensor input = torch::from_blob(data[i].data(), {139},options_);
+
+    torch::Tensor answer = torch::from_blob(target[i].data(), {6},options_);
+    auto output = net.forward(input);
+    // cout<<input<<endl;
+    cout<<answer<<endl<<endl;
+    cout<<output<<endl;
+  }
+  return 0;
+}

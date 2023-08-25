@@ -5,11 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <time.h>
-#include <chrono>
-#include <eigen3/Eigen/Dense>
 using namespace std;
-using namespace Eigen;
-
 
 class Net : public torch::nn::Module
 {
@@ -33,11 +29,12 @@ public:
   }
   void setWeights()
   {
-    torch::load(linear1, "../weight/fc1.pt");
-    torch::load(linear2, "../weight/fc2.pt");
-    torch::load(linear3, "../weight/fc3.pt");
+    torch::load(linear1,"weight/fc1.pt");
+    torch::load(linear2,"weight/fc2.pt");
+    torch::load(linear3,"weight/fc3.pt");
     // cout<<linear1->bias<<endl;
   }
+
 
 private:
   torch::nn::Linear linear1;
@@ -45,7 +42,7 @@ private:
   torch::nn::Linear linear3;
 };
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   ifstream inputFile(argv[1]);
   vector<vector<float>> data;
@@ -68,7 +65,7 @@ int main(int argc, char **argv)
 
   ifstream inputFile2(argv[2]);
   vector<vector<float>> target;
-
+  
   while (getline(inputFile2, line))
   {
     vector<float> row;
@@ -85,49 +82,38 @@ int main(int argc, char **argv)
   }
   inputFile2.close();
 
+
   int64_t input_size = 139;
   int64_t hidden_size = 256;
   int64_t output_size = 6;
+  int64_t batch_size = 4;
 
   torch::manual_seed(123); // Set a random seed for reproducibility
 
+  
+
   // Create a neural network
   Net net(input_size, hidden_size, output_size);
+
 
   net.setWeights();
   net.to(torch::kCPU);
 
   // torch::nn::MSELoss loss_fn;
   // torch::optim::SGD optimizer(net.parameters(), /*lr=*/0.01);
-  torch::TensorOptions options_(torch::kFloat);
-  clock_t start, finish;
-  double duration;
+torch::TensorOptions options_(torch::kFloat);
+clock_t start, finish;
+double duration;
+  for(size_t i=0;i<10;++i){
+    torch::Tensor input = torch::from_blob(data[i].data(), {139},options_);
 
-  std::chrono::steady_clock::time_point st_start_time;
-  
-  
-  
-  for (size_t i = 0; i < 10; ++i)
-  {
-    torch::Tensor input = torch::from_blob(data[i].data(), {139}, options_);
-
-    torch::Tensor answer = torch::from_blob(target[i].data(), {6}, options_);
+    torch::Tensor answer = torch::from_blob(target[i].data(), {6},options_);
     start = clock();
-
-    st_start_time = std::chrono::steady_clock::now();
-
-    double control_time_real_ = 0.0;
     auto output = net.forward(input);
     // cout<<input<<endl;
-    control_time_real_ = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - st_start_time).count();
-  
     finish = clock();
     duration = (double)(finish - start) / CLOCKS_PER_SEC;
-    printf("%f sec\n", duration);
-    control_time_real_ = control_time_real_ / 1000;
-  cout << "all : " << control_time_real_ << "ms" << endl
-       << endl;
-
+    printf("%f sec\n",duration);
     // cout<<answer<<endl<<endl;
     // cout<<output<<endl;
   }

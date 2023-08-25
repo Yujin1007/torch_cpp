@@ -6,10 +6,7 @@
 #include <sstream>
 #include <time.h>
 #include <chrono>
-#include <eigen3/Eigen/Dense>
 using namespace std;
-using namespace Eigen;
-
 
 class Net : public torch::nn::Module
 {

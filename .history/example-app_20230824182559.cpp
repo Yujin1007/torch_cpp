@@ -6,10 +6,7 @@
 #include <sstream>
 #include <time.h>
 #include <chrono>
-#include <eigen3/Eigen/Dense>
 using namespace std;
-using namespace Eigen;
-
 
 class Net : public torch::nn::Module
 {
@@ -99,7 +96,7 @@ int main(int argc, char **argv)
 
   // torch::nn::MSELoss loss_fn;
   // torch::optim::SGD optimizer(net.parameters(), /*lr=*/0.01);
-  torch::TensorOptions options_(torch::kFloat);
+  torch::TensorOptions options_(torch::kFloat) s;
   clock_t start, finish;
   double duration;
 

@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "functional": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp",
+        "random": "cpp",
+        "chrono": "cpp",
+        "iostream": "cpp",
+        "fstream": "cpp"
+    }
+}

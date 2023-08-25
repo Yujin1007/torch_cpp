@@ -1,25 +1,17 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
-project(example-app)
+project(actor)
 
 
-find_package(Torch REQUIRED PATHS "/home/kist-robot2/libtorch")
+find_package (Eigen3 3.3.7 REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-add_executable(example-app src/example-app.cpp)
-target_link_libraries(example-app "${TORCH_LIBRARIES}")
-set_property(TARGET example-app PROPERTY CXX_STANDARD 17)
+add_executable(actor actor.cpp)
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(actor Eigen3::Eigen)
+set_property(TARGET actor PROPERTY CXX_STANDARD 17)
 
 
-message(STATUS "Torch  : " ${TORCH_LIBRARIES}/include/torch)
-
-# The following code block is suggested to be used on Windows.
-# According to https://github.com/pytorch/pytorch/issues/25457,
-# the DLLs need to be copied to avoid memory errors.
-if (MSVC)
-  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-  add_custom_command(TARGET example-app
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TORCH_DLLS}
-                     $<TARGET_FILE_DIR:example-app>)
-endif (MSVC)
